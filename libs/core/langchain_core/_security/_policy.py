@@ -2,6 +2,7 @@
 
 import asyncio
 import dataclasses
+import functools
 import ipaddress
 import os
 import socket
@@ -135,13 +136,12 @@ def _extract_embedded_ipv4(
     return None
 
 
+@functools.lru_cache(maxsize=1024)
 def _ip_in_blocked_networks(
     addr: ipaddress.IPv4Address | ipaddress.IPv6Address,
     policy: SSRFPolicy,
 ) -> str | None:
     """Return a reason string if *addr* falls in a blocked range, else None."""
-    # NOTE: if profiling shows this is a hot path, consider memoising with
-    # @functools.lru_cache (key on (addr, id(policy))).
     if isinstance(addr, ipaddress.IPv4Address):
         if policy.block_private_ips:
             for net in _BLOCKED_IPV4_NETWORKS:
